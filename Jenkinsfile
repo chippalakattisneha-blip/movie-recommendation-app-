@@ -40,17 +40,20 @@ pipeline {
         
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t ${DOCKER_HUB_USER}/${IMAGE_NAME}:${IMAGE_TAG} ."
-                sh "docker build -t ${DOCKER_HUB_USER}/${IMAGE_NAME}:latest ."
+                // This injects the macOS local application paths so Jenkins can see Docker
+                withEnv(["PATH+DOCKER=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"]) {
+                    sh "docker build -t ${DOCKER_HUB_USER}/${IMAGE_NAME}:${IMAGE_TAG} ."
+                }
             }
         }
-        
+
         stage('Push to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-                    sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin"
-                    sh "docker push ${DOCKER_HUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
-                    sh "docker push ${DOCKER_HUB_USER}/${IMAGE_NAME}:latest"
+                withEnv(["PATH+DOCKER=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"]) {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', passwordVariable: 'DOCKER_HUB_PASSWORD', usernameVariable: 'DOCKER_HUB_USERNAME')]) {
+                        sh "echo \$DOCKER_HUB_PASSWORD | docker login -u \$DOCKER_HUB_USERNAME --password-stdin"
+                        sh "docker push ${DOCKER_HUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
+                    }
                 }
             }
         }
