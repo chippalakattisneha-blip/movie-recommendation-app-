@@ -7,6 +7,11 @@ pipeline {
         IMAGE_TAG       = "${BUILD_NUMBER}"
     }
     
+    tools {
+        nodejs "node"
+        sonarScanner "sonar-scanner"
+    }
+    
     stages {
         stage('Fetch Code') {
             steps {
