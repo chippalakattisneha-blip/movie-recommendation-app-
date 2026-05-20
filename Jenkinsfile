@@ -9,9 +9,9 @@ pipeline {
     
     tools {
         nodejs "node"
-        sonarScanner "sonar-scanner"
+        "hudson.plugins.sonar.SonarRunnerInstallation" "sonar-scanner"
     }
-    
+
     stages {
         stage('Fetch Code') {
             steps {
