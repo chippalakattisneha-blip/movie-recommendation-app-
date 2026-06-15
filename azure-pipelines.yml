@@ -1,11 +1,12 @@
 trigger:
   - main
 
+# Switch back to Azure's clean, native cloud environment 👇
 pool:
-  vmImage: 'ubuntu-latest' # Clean cloud operating system
+  vmImage: 'ubuntu-latest'
 
 variables:
-  - group: vercel-credentials # Links your secret variables vault
+  - group: vercel-credentials # Links your library secret variables block smoothly
   - name: IMAGE_NAME
     value: 'moviematch'
 
@@ -46,3 +47,4 @@ stages:
           - script: |
               docker push $(DOCKER_HUB_USER)/$(IMAGE_NAME):$(Build.BuildId)
             displayName: 'Push Container Image to Docker Hub'
+            
