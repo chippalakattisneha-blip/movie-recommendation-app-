@@ -29,9 +29,9 @@ pipeline {
         stage('SonarQube Code Analysis') {
             steps {
                 script {
-                    // Uses your named SonarQube configuration and injects the authorization token directly
                     withSonarQubeEnv('SonarQube-Server') {
-                        sh "sonar-scanner -Dsonar.projectKey=moviematch -Dsonar.sources=src -Dsonar.token=sqa_2cd500a1de1864a811658d632dc9a381fde6d094"
+                        // Changed -Dsonar.token to -Dsonar.login for compatibility with Scanner 3.x
+                        sh "sonar-scanner -Dsonar.projectKey=moviematch -Dsonar.sources=src -Dsonar.login=sqa_2cd500a1de1864a811658d632dc9a381fde6d094"
                     }
                 }
             }
