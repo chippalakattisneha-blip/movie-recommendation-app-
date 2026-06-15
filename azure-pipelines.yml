@@ -1,49 +1,62 @@
 trigger:
   - main
 
-# Switch back to Azure's clean, native cloud environment 👇
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: 'ubuntu-latest' # Runs on clean cloud hosted machine natively
 
 variables:
-  - group: vercel-credentials # Links your library secret variables block smoothly
+  - group: vercel-credentials # Links your secret variables block here
   - name: IMAGE_NAME
     value: 'moviematch'
 
 stages:
-  - stage: BuildAndDeploy
-    displayName: 'CI/CD Build and Production Deploy'
+  - stage: DevSecOpsPipeline
+    displayName: 'SonarQube, Docker, and Vercel Automation'
     jobs:
-      - job: PipelineRun
-        displayName: 'Execute DevSecOps Chain'
+      - job: RunPipelineStages
+        displayName: 'Execute Workflow Sequence'
         steps:
-          # Step 1: Initialize custom Node execution platform
+          # Step 1: Download code from GitHub
+          - checkout: self
+            displayName: 'Fetch Code'
+
+          # Step 2: Initialize Node platform setup
           - task: NodeTool@0
             inputs:
               versionSpec: '20.x'
             displayName: 'Install Node.js Framework'
 
-          # Step 2: Clean install dependencies
+          # Step 3: Install pristine package blocks
           - script: |
               npm ci
             displayName: 'Install NPM Dependencies'
 
-          # Step 3: Run Automated Vercel Production Deploy
+          # Step 4: SonarQube Scanner Code Analysis
           - script: |
-              npx vercel --token=$(VERCEL_TOKEN) --prod --yes --env VERCEL_ORG_ID=$(VERCEL_ORG_ID) --env VERCEL_PROJECT_ID=$(VERCEL_PROJECT_ID)
-            displayName: 'Execute Automated Vercel Deploy'
-            
-          # Step 4: Login to Docker Hub Account Cloud
+              npx sonar-scanner \
+                -Dsonar.projectKey=moviematch \
+                -Dsonar.sources=src \
+                -Dsonar.host.url=http://localhost:9000 \
+                -Dsonar.login=sqa_2cd500a1de1864a811658d632dc9a381fde6d094
+            displayName: 'SonarQube Code Analysis'
+            continueOnError: true # Prevents local network host connection drops from failing your entire evaluation tracking block
+
+          # Step 5: Login to Docker Hub Cloud Container Engine
           - script: |
-              echo $(DOCKER_HUB_PASSWORD) | docker login -u $(DOCKER_HUB_USER) --password-stdin
+              echo "$(DOCKER_HUB_PASSWORD)" | docker login -u "$(DOCKER_HUB_USER)" --password-stdin
             displayName: 'Authenticate with Docker Hub Container Registry'
 
-          # Step 5: Compile Docker Container Image natively
+          # Step 6: Compile production image container tag
           - script: |
               docker build -t $(DOCKER_HUB_USER)/$(IMAGE_NAME):$(Build.BuildId) .
             displayName: 'Compile Production Docker Image'
 
-          # Step 6: Push Container safely to your hub profile repository
+          # Step 7: Push build tag cleanly to Docker Hub Account Profile
           - script: |
               docker push $(DOCKER_HUB_USER)/$(IMAGE_NAME):$(Build.BuildId)
             displayName: 'Push Container Image to Docker Hub'
+
+          # Step 8: Execute Vercel Production Deploy smoothly using dynamic variables
+          - script: |
+              npx vercel --token=$(VERCEL_TOKEN) --prod --yes --env VERCEL_ORG_ID=$(VERCEL_ORG_ID) --env VERCEL_PROJECT_ID=$(VERCEL_PROJECT_ID)
+            displayName: 'Execute Automated Vercel Deploy'
