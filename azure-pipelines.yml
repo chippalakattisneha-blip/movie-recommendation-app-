@@ -36,10 +36,9 @@ stages:
               npx sonar-scanner \
                 -Dsonar.projectKey=moviematch \
                 -Dsonar.sources=src \
-                -Dsonar.host.url=http://localhost:9000 \
+                -Dsonar.host.url=https://cylinder-jelly-wobbling.ngrok-free.dev \
                 -Dsonar.login=sqa_2cd500a1de1864a811658d632dc9a381fde6d094
             displayName: 'SonarQube Code Analysis'
-            continueOnError: true # Prevents local network host connection drops from failing your entire evaluation tracking block
 
           # Step 5: Login to Docker Hub Cloud Container Engine
           - script: |
