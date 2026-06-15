@@ -9,7 +9,6 @@ pipeline {
     
     tools {
         nodejs "node"
-        // Corrected tool syntax using the official Jenkins class identifier
         "hudson.plugins.sonar.SonarRunnerInstallation" "sonar-scanner"
     }
 
@@ -30,10 +29,9 @@ pipeline {
         stage('SonarQube Code Analysis') {
             steps {
                 script {
-                    // Uses the SonarQube global server configuration and authentication token smoothly
+                    // Uses your named SonarQube configuration and injects the authorization token directly
                     withSonarQubeEnv('SonarQube-Server') {
-                        // Removed the manual global npm installation to prevent environment path pollution
-                        sh "sonar-scanner -Dsonar.projectKey=moviematch -Dsonar.sources=src"
+                        sh "sonar-scanner -Dsonar.projectKey=moviematch -Dsonar.sources=src -Dsonar.token=sqa_2cd500a1de1864a811658d632dc9a381fde6d094"
                     }
                 }
             }
@@ -50,7 +48,7 @@ pipeline {
 
         stage('Push to Docker Hub') {
             steps {
-                // Injects macOS paths and pulls masked credentials securely from Jenkins manager
+                // Injects macOS paths and pulls masked credentials securely from Jenkins credential manager
                 withEnv(["PATH+DOCKER=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"]) {
                     withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', passwordVariable: 'DOCKER_HUB_PASSWORD', usernameVariable: 'DOCKER_HUB_USERNAME')]) {
                         sh "echo \$DOCKER_HUB_PASSWORD | docker login -u \$DOCKER_HUB_USERNAME --password-stdin"
