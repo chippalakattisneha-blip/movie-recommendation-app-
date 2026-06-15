@@ -1,19 +1,48 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
 trigger:
-- main
+  - main
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'ubuntu-latest' # Clean cloud operating system
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+variables:
+  - group: vercel-credentials # Links your secret variables vault
+  - name: IMAGE_NAME
+    value: 'moviematch'
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+stages:
+  - stage: BuildAndDeploy
+    displayName: 'CI/CD Build and Production Deploy'
+    jobs:
+      - job: PipelineRun
+        displayName: 'Execute DevSecOps Chain'
+        steps:
+          # Step 1: Initialize custom Node execution platform
+          - task: NodeTool@0
+            inputs:
+              versionSpec: '20.x'
+            displayName: 'Install Node.js Framework'
+
+          # Step 2: Clean install dependencies
+          - script: |
+              npm ci
+            displayName: 'Install NPM Dependencies'
+
+          # Step 3: Run Automated Vercel Production Deploy
+          - script: |
+              npx vercel --token=$(VERCEL_TOKEN) --prod --yes --env VERCEL_ORG_ID=$(VERCEL_ORG_ID) --env VERCEL_PROJECT_ID=$(VERCEL_PROJECT_ID)
+            displayName: 'Execute Automated Vercel Deploy'
+
+          # Step 4: Login to Docker Hub Account Cloud
+          - script: |
+              echo $(DOCKER_HUB_PASSWORD) | docker login -u $(DOCKER_HUB_USER) --password-stdin
+            displayName: 'Authenticate with Docker Hub Container Registry'
+
+          # Step 5: Compile Docker Container Image natively
+          - script: |
+              docker build -t $(DOCKER_HUB_USER)/$(IMAGE_NAME):$(Build.BuildId) .
+            displayName: 'Compile Production Docker Image'
+
+          # Step 6: Push Container safely to your hub profile repository
+          - script: |
+              docker push $(DOCKER_HUB_USER)/$(IMAGE_NAME):$(Build.BuildId)
+            displayName: 'Push Container Image to Docker Hub'
