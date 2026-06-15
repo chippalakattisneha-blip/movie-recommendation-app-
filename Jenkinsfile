@@ -65,9 +65,10 @@ pipeline {
         stage('Deploy to Vercel') {
             steps {
                 script {
-                    // Pulls the modern NodeJS engine environment tools to execute npm packages
-                    // Passing token and ID flags tells the CLI to bypass manual browser login gates
-                    sh "npx vercel --token ${VERCEL_TOKEN} --prod --yes --token=${VERCEL_TOKEN} --env VERCEL_ORG_ID=${VERCEL_ORG_ID} --env VERCEL_PROJECT_ID=${VERCEL_PROJECT_ID}"
+                    // Pulls the hidden token from Jenkins credential warehouse securely at runtime
+                    withCredentials([string(credentialsId: 'vercel-token-secret', variable: 'VERCEL_TOKEN')]) {
+                        sh "npx vercel --token=\${VERCEL_TOKEN} --prod --yes --env VERCEL_ORG_ID=${VERCEL_ORG_ID} --env VERCEL_PROJECT_ID=${VERCEL_PROJECT_ID}"
+                    }
                 }
             }
         }
